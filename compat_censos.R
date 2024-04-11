@@ -1,22 +1,28 @@
 library(sf)
 library(dplyr)
 
-setor_2022 <- read_sf("/home/joaquim/Documents/nikity_compara/bases/RJ_Malha_Preliminar_2022.gpkg")
+
+
+# setor_2022 <- read_sf("/home/joaquim/Documents/nikity_compara/bases/RJ_Malha_Preliminar_2022.gpkg")
+setor_2022 <- choose.files(multi = FALSE)
 
 depara <- read_sf(
-    "/home/joaquim/Documents/nikity_compara/bases/Comparabilidade 2022 - 2010 - RJ.xlsx",
+    # "/home/joaquim/Documents/nikity_compara/bases/Comparabilidade 2022 - 2010 - RJ.xlsx",
+    choose.files(multi = FALSE),
     options = "HEADERS=FORCE"
 )
 
 dom_2010 <- read_sf(
-    "/home/joaquim/Documents/nikity_compara/bases/Base informaçoes setores2010 universo RJ/EXCEL/Domicilio01_RJ.xls",
+    # "/home/joaquim/Documents/nikity_compara/bases/Base informaçoes setores2010 universo RJ/EXCEL/Domicilio01_RJ.xls",
+    choose.files(multi = FALSE),
     options = "HEADERS=FORCE"
 ) |>
     select(Cod_setor, V001) |>
     rename(SETOR_2010 = Cod_setor, dom_2010 = V001)
 
 pop_2010 <- read_sf(
-    "/home/joaquim/Documents/nikity_compara/bases/Base informaçoes setores2010 universo RJ/EXCEL/Domicilio02_RJ.xls",
+    # "/home/joaquim/Documents/nikity_compara/bases/Base informaçoes setores2010 universo RJ/EXCEL/Domicilio02_RJ.xls",
+    choose.files(multi = FALSE),
     options = "HEADERS=FORCE"
 ) |>
     select(Cod_setor, V001) |>
@@ -42,6 +48,11 @@ set_2010_manual <- unique(set_2010_manual$SETOR_2010)
 
 set_auto <- set_cont |>
     filter(!(SETOR_2022 %in% set_2022_manual) & !(SETOR_2010 %in% set_2010_manual))
+
+# depara_manual <- depara |>
+# filter(SETOR_2022 %in% set_2022_manual | SETOR_2010 %in% set_2010_manual)
+
+
 
 # agg_2010 <- set_auto |>
 #     filter(c_2010 > 1) |>

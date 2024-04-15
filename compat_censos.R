@@ -12,6 +12,22 @@ setor_2022 <- read_sf(choose.files(caption = "setores de 2022", multi = FALSE)) 
     group_by(SETOR_2022, CD_MUN, NM_MUN, v0001, v0002) |>
     summarise()
 
+# seleciona arquivo com camadas de divisões administrativas
+arq_adm <- choose.files(caption = "divisões administrativas", multi = FALSE)
+
+# carrega base de regioes de niteroi
+regioes <- read_sf(arq_adm, layer = select.list(st_layers(arq_adm)[[1]], title = "base de regiões administrativas")) |>
+    st_make_valid() |>
+    st_transform(crs = st_crs(setor_2022)) |>
+    select(Layer) |>
+    rename("Regiao" = "Layer")
+
+# carrega base de bairros de niteroi
+bairros <- read_sf(arq_adm, multi = FALSE, layer = select.list(st_layers(arq_adm)[[1]], title = "base de bairros")) #|>
+# st_make_valid() |>
+# st_transform(crs = st_crs(setor_2022)) |>
+# select(Layer) |>
+# rename("Bairro" = "Layer")
 
 # carrega arquivo com tabela de comparabilidade entre setores 2010 x 2022
 depara <- read_sf(
@@ -162,6 +178,7 @@ setor_2022_final <- setor_2022 |>
     select(SETOR_2022) |>
     left_join(agregados, by = "SETOR_2022")
 
+# agrega os dados de 2022 e associa com regioes e bairros de niteroi
 SETOR_FINAL <- setor_2022_final |>
     group_by(COD_AGR) |>
     summarise(
@@ -169,7 +186,10 @@ SETOR_FINAL <- setor_2022_final |>
         pop_2010 = first(pop_2010),
         dom_2022 = sum(as.numeric(dom_2022)),
         pop_2022 = sum(as.numeric(pop_2022))
-    )
+    ) |>
+    st_join(regioes, join = st_intersects, left = TRUE, largest = TRUE) |>
+    st_join(bairros, join = st_intersects, left = TRUE, largest = TRUE)
+
 
 st_write(SETOR_FINAL, file.choose(), layer = "SETOR_FINAL_COMPARACAO")
 

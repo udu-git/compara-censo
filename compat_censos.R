@@ -23,11 +23,12 @@ regioes <- read_sf(arq_adm, layer = select.list(st_layers(arq_adm)[[1]], title =
     rename("Regiao" = "Layer")
 
 # carrega base de bairros de niteroi
-bairros <- read_sf(arq_adm, multi = FALSE, layer = select.list(st_layers(arq_adm)[[1]], title = "base de bairros")) #|>
-# st_make_valid() |>
-# st_transform(crs = st_crs(setor_2022)) |>
-# select(Layer) |>
-# rename("Bairro" = "Layer")
+bairros <- st_read(choose.files(caption = "base de bairros", multi = FALSE)) |>
+    # bairros <- st_read(arq_adm, multi = FALSE, layer = select.list(st_layers(arq_adm)[[1]], title = "base de bairros")) #|>
+    st_make_valid() |>
+    st_transform(crs = st_crs(setor_2022)) |>
+    select(RefName) |>
+    rename("Bairro" = "RefName")
 
 # carrega arquivo com tabela de comparabilidade entre setores 2010 x 2022
 depara <- read_sf(
@@ -187,21 +188,42 @@ SETOR_FINAL <- setor_2022_final |>
         dom_2022 = sum(as.numeric(dom_2022)),
         pop_2022 = sum(as.numeric(pop_2022))
     ) |>
+    mutate(
+        delta_dom = dom_2022 - dom_2010,
+        delta_pop = pop_2022 - pop_2010
+    ) |>
     st_join(regioes, join = st_intersects, left = TRUE, largest = TRUE) |>
     st_join(bairros, join = st_intersects, left = TRUE, largest = TRUE)
 
+SETOR_FINAL |>
+    filter(Bairro == "Icaraí") |>
+    View()
+# st_write(SETOR_FINAL, file.choose(), layer = "SETOR_FINAL_COMPARACAO")
 
-st_write(SETOR_FINAL, file.choose(), layer = "SETOR_FINAL_COMPARACAO")
+tabela_bairros <- SETOR_FINAL |>
+    as.data.frame() |>
+    summarise(
+        dom_2010 = sum(dom_2010),
+        pop_2010 = sum(pop_2010),
+        dom_2022 = sum(dom_2022),
+        pop_2022 = sum(pop_2022),
+        .by = "Bairro"
+    ) |>
+    mutate(
+        delta_dom = dom_2022 - dom_2010,
+        delta_pop = pop_2022 - pop_2010
+    )
 
-# length(unique(SETOR_FINAL$COD_AGR))
-# SETOR_FINAL <- setor_2022 |>
-#     mutate(SETOR_2022 = substr(CD_SETOR, 1, 15)) |>
-#     filter(substr(SETOR_2022, 1, 7) == "3303302") |>
-#     select(SETOR_2022) |>
-#     left_join(set_agg_2010, by = "SETOR_2022") |>
-#     rows_update(set_agg_man, by = "SETOR_2022")
-
-
-
-var_2010 |>
-    filter(SETOR_2010 %in% c("330330205000752", "330330205000547"))
+tabela_regioes <- SETOR_FINAL |>
+    as.data.frame() |>
+    summarise(
+        dom_2010 = sum(dom_2010),
+        pop_2010 = sum(pop_2010),
+        dom_2022 = sum(dom_2022),
+        pop_2022 = sum(pop_2022),
+        .by = "Regiao"
+    ) |>
+    mutate(
+        delta_dom = dom_2022 - dom_2010,
+        delta_pop = pop_2022 - pop_2010
+    )

@@ -179,7 +179,7 @@ setor_2022_final <- setor_2022 |>
     select(SETOR_2022) |>
     left_join(agregados, by = "SETOR_2022")
 
-# agrega os dados de 2022 e associa com regioes e bairros de niteroi
+# agrega os dados de 2022 e associa espacialmente com regioes e bairros de niteroi
 SETOR_FINAL <- setor_2022_final |>
     group_by(COD_AGR) |>
     summarise(
@@ -195,11 +195,10 @@ SETOR_FINAL <- setor_2022_final |>
     st_join(regioes, join = st_intersects, left = TRUE, largest = TRUE) |>
     st_join(bairros, join = st_intersects, left = TRUE, largest = TRUE)
 
-SETOR_FINAL |>
-    filter(Bairro == "Icaraí") |>
-    View()
-# st_write(SETOR_FINAL, file.choose(), layer = "SETOR_FINAL_COMPARACAO")
+# salva o arquivo espacial de setores com dados comparativos
+st_write(SETOR_FINAL, file.choose(caption = "salvar setores comparativos", multi = FALSE), layer = "SETOR_FINAL_COMPARACAO")
 
+# produz tabela de agregados por bairro
 tabela_bairros <- SETOR_FINAL |>
     as.data.frame() |>
     summarise(
@@ -214,6 +213,7 @@ tabela_bairros <- SETOR_FINAL |>
         delta_pop = pop_2022 - pop_2010
     )
 
+# produz a tabela de agregados por regiao
 tabela_regioes <- SETOR_FINAL |>
     as.data.frame() |>
     summarise(
@@ -227,3 +227,9 @@ tabela_regioes <- SETOR_FINAL |>
         delta_dom = dom_2022 - dom_2010,
         delta_pop = pop_2022 - pop_2010
     )
+
+# salva tabela de agregados por bairro
+st_write(tabela_bairros, file.choose(caption = "salvar tabela de bairros", multi = FALSE))
+
+# salva tabela de agregados por regiao
+st_write(tabela_regioes, file.choose(caption = "salvar tabela de regiões", multi = FALSE))

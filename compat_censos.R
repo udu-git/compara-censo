@@ -1,6 +1,21 @@
 library(sf)
 library(dplyr)
 
+
+# Em atenção à sua solicitação, cumpre esclarecer que a variável V0001 considera as pessoas moradoras em domicílios ocupados, ou seja, domicílios particulares
+# permanentes ocupados (DPPO), domicílios particulares improvisados ocupados (DPIO) ou domicílios coletivos com morador (DCCM).
+
+# Nos domicílios particulares permanentes de uso ocasional (DPPUO), domicílios particulares permanentes vagos (DPPV) e domicílios coletivos sem morador (DCSM),
+# conforme o conceito de morador utilizado pelo IBGE, não existem pessoas residindo.
+
+# Já em relação à segunda dúvida, sobre a comparação entre a variável V0005 (Total pessoas em Domicílios Particulares Ocupados / DPPO + DPIO) com o resultado da
+# variável V0001 (Total de pessoas) / V0007 (Total de Domicílios Particulares Ocupados DPPO + DPIO), a diferença encontra-se nas pessoas residentes em domicílios
+# coletivos com morador. A variável V0001 engloba os moradores de todos os tipos de domicílio, inclusive os coletivos. Logo, é esperado que o resultado desse 
+# cálculo apresente divergências em relação à variável V0005 sempre que houver um domicílio coletivo no setor.
+
+## 2022.V0001 = 2010.Domicilio02.V001  --> pop_ano
+## 2022.V0002 = 2010.Domicilio01.V001  --> dom_ano
+
 # carrega arquivo com base vetorial e variáveis dos setores de 2022
 # setor_2022 <- read_sf("/home/joaquim/Documents/nikity_compara/bases/RJ_Malha_Preliminar_2022.gpkg")
 setor_2022 <- read_sf(choose.files(caption = "setores de 2022", multi = FALSE)) |>

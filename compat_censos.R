@@ -1,7 +1,6 @@
 library(sf)
 library(dplyr)
 
-# testando git
 # carrega arquivo com base vetorial e variáveis dos setores de 2022
 # setor_2022 <- read_sf("/home/joaquim/Documents/nikity_compara/bases/RJ_Malha_Preliminar_2022.gpkg")
 setor_2022 <- read_sf(choose.files(caption = "setores de 2022", multi = FALSE)) |>

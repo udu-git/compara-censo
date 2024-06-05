@@ -48,7 +48,7 @@ bairros <- st_read(choose.files(caption = "base de bairros", multi = FALSE)) |>
 depara <- read_sf(
     # "/home/joaquim/Documents/nikity_compara/bases/Comparabilidade 2022 - 2010 - RJ.xlsx",
     choose.files(caption = "tabela de:para 2010/2022", multi = FALSE),
-    options = "HEADERS=FORCE"
+    # options = "HEADERS=FORCE"
 ) |>
     distinct()
 
@@ -210,7 +210,7 @@ SETOR_FINAL <- setor_2022_final |>
     st_join(bairros, join = st_intersects, left = TRUE, largest = TRUE)
 
 # salva o arquivo espacial de setores com dados comparativos
-st_write(SETOR_FINAL, file.choose(caption = "salvar setores comparativos", multi = FALSE), layer = "SETOR_FINAL_COMPARACAO")
+st_write(SETOR_FINAL, choose.files(caption = "salvar setores comparativos", multi = FALSE), layer = "SETOR_FINAL_COMPARACAO")
 
 # produz tabela de agregados por bairro
 tabela_bairros <- SETOR_FINAL |>
@@ -243,7 +243,7 @@ tabela_regioes <- SETOR_FINAL |>
     )
 
 # salva tabela de agregados por bairro
-st_write(tabela_bairros, file.choose(caption = "salvar tabela de bairros", multi = FALSE))
+st_write(tabela_bairros, choose.files(caption = "salvar tabela de bairros", multi = FALSE))
 
 # salva tabela de agregados por regiao
-st_write(tabela_regioes, file.choose(caption = "salvar tabela de regiões", multi = FALSE))
+st_write(tabela_regioes, choose.files(caption = "salvar tabela de regiões", multi = FALSE))

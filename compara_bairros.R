@@ -34,7 +34,14 @@ bairros <- st_read(choose.files(caption = "base de bairros", multi = FALSE)) |>
     # bairros <- st_read(arq_adm, multi = FALSE, layer = select.list(st_layers(arq_adm)[[1]], title = "base de bairros")) #|>
     st_make_valid() |>
     st_transform(crs = st_crs(setor_2022)) |>
-    select(RefName) |>
+    mutate(Regiao = case_when(
+        str_detect(Layer, "RPB -") ~ "Praias da Baía",
+        str_detect(Layer, "RN -") ~ "Norte",
+        str_detect(Layer, "RP -") ~ "Pendotiba",
+        str_detect(Layer, "RO -") ~ "Oceânica",
+        str_detect(Layer, "RL -") ~ "Leste",
+    )) |>
+    select(RefName, Regiao) |>
     rename("Bairro" = "RefName")
 
 
@@ -177,7 +184,7 @@ setor_2010_full <- setor_2010_rec |>
 # intersecciona os setores 2010 com os bairros de niteroi
 setor_2010_bairros <- setor_2010_full |>
     st_intersection(bairros) |>
-    group_by(SETOR_2010, CD_GEOCODM, NM_MUNICIP, dom_2010, pop_2010, area_tot, Bairro) |>
+    group_by(SETOR_2010, CD_GEOCODM, NM_MUNICIP, dom_2010, pop_2010, area_tot, Bairro, Regiao) |>
     summarise() |>
     mutate(area_parc = st_area(geometry)) |>
     mutate(dom_2010_parc = dom_2010 * area_parc / area_tot) |>
@@ -202,10 +209,10 @@ setor_2022_bairros <- setor_2022_full |>
 # agrega por bairros os dados de 2010
 bairros_2010 <- setor_2010_bairros |>
     drop_na() |>
-    group_by(Bairro) |>
+    group_by(Bairro, Regiao) |>
     summarise(
-        dom_2010 = sum(dom_2010_parc),
-        pop_2010 = sum(pop_2010_parc)
+        dom_2010 = round(sum(dom_2010_parc), 0),
+        pop_2010 = round(sum(pop_2010_parc), 0)
     ) |>
     as.data.frame()
 
@@ -215,8 +222,8 @@ bairros_2022 <- setor_2022_bairros |>
     drop_na() |>
     group_by(Bairro) |>
     summarise(
-        dom_2022 = sum(dom_2022_parc),
-        pop_2022 = sum(pop_2022_parc)
+        dom_2022 = round(sum(dom_2022_parc), 0),
+        pop_2022 = round(sum(pop_2022_parc), 0)
     ) |>
     as.data.frame()
 

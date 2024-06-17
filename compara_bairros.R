@@ -6,14 +6,10 @@ library(tidyr)
 # carrega arquivo com base vetorial e variáveis dos setores de 2022 e filtra por 3303302 (niteroi)
 setor_2022 <-
     read_sf(choose.files(caption = "setores de 2022", multi = FALSE)) |>
-    st_cast("MULTIPOLYGON") |>
     st_make_valid() |>
     mutate(SETOR_2022 = substr(CD_SETOR, 1, 15), dom_2022 = as.numeric(v0002), pop_2022 = as.numeric(v0001)) |>
     filter(substr(SETOR_2022, 1, 7) == "3303302") |>
-    group_by(SETOR_2022, CD_MUN, NM_MUN, v0001, v0002) |>
-    summarise() |>
-    st_transform(st_crs(31983)) |>
-    ungroup()
+    st_transform(st_crs(31983))
 
 
 # carrega arquivo com base vetorial e variáveis dos setores de 2010 e filtra por 3303302 (niteroi)
@@ -112,14 +108,34 @@ setor_2010_naourb <- setor_2010 |>
     mutate(area_tot = st_area(geometry))
 
 
-# separa os setores 2022 que iterseccionam areas urbanizadas 2015
-setor_2022_urb <-
-    st_filter(setor_2022, area_urb_2019, .predicate = st_intersects)
+# # separa os setores 2022 que iterseccionam areas urbanizadas 2019
+# setor_2022_urb <-
+#     st_filter(setor_2022, area_urb_2019, .predicate = st_intersects)
 
 
-# separa os setores 2010 que não iterseccionam areas urbanizadas 2015
+# # separa os setores 2010 que não iterseccionam areas urbanizadas 2015
+# setor_2022_naourb <- setor_2022 |>
+#     setdiff(setor_2022_urb) |>
+#     mutate(area_tot = st_area(geom))
+
+
+# cira lista de setores 2022 que iterseccionam areas urbanizadas 2019
+lista_setor_2022_urb <-
+    st_filter(setor_2022, area_urb_2019, .predicate = st_intersects) |>
+    pull(unique(SETOR_2022))
+
+
+# separa os setores 2022 que iterseccionam areas urbanizadas 2019
+setor_2022_urb <- setor_2022 |>
+    filter(SETOR_2022 %in% lista_setor_2022_urb)
+
+
+# separa os setores 2022 que não iterseccionam areas urbanizadas 2019
 setor_2022_naourb <- setor_2022 |>
-    setdiff(setor_2022_urb) |>
+    filter(!(SETOR_2022 %in% lista_setor_2022_urb)) |>
+    st_cast("MULTIPOLYGON") |>
+    group_by(SETOR_2022, CD_MUN, NM_MUN, dom_2022, pop_2022) |>
+    summarise() |>
     mutate(area_tot = st_area(geom))
 
 
@@ -132,8 +148,22 @@ setor_2010_rec <- setor_2010_urb |>
 
 
 # recorta os setores 2022 com as áreas urbanizadas 2019
-setor_2022_rec <- setor_2022_urb |>
-    st_intersection(area_urb_2019) |>
+setor_2022_rec_t <- setor_2022_urb |>
+    st_intersection(area_urb_2019) #|>
+
+
+# extrai os polígonos das feições que geraram geometrycollections
+setor_2022_rec_coll <- setor_2022_rec_t %>%
+    filter(st_is(., c("GEOMETRYCOLLECTION"))) |>
+    st_collection_extract(type = "POLYGON")
+
+
+# filtra as feições que são polígonos ou multipolígonos, junta com as feições que eram geometrycollections
+# e converte em multipolígonos por setor
+setor_2022_rec <- setor_2022_rec_t %>%
+    filter(st_is(., c("POLYGON", "MULTIPOLYGON"))) |>
+    bind_rows(setor_2022_rec_coll) |>
+    st_cast("MULTIPOLYGON") |>
     group_by(SETOR_2022, CD_MUN, NM_MUN, dom_2022, pop_2022) |>
     summarise() |>
     mutate(area_tot = st_area(geom))
